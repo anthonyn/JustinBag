@@ -1,0 +1,13 @@
+Bag Changes
+
+- As intensity of light goes up, lights get mapped to a differnet color - map to color wheel
+
+- Too sensitive, goes to max brightness too quickly, gets too bright too often
+
+- Map differnt things to diffetnet things, jewels and strips do differnt things, 3 jewels and 1 strip
+
+- segmenting strip, bottom brightest, two side doing a vertial thing, 2 stars roating, 
+
+- add button to cycle through modes
+
+

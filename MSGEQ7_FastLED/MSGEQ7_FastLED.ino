@@ -13,8 +13,11 @@
 #include "FastLED.h"
 
 #define stripPin    4
+//Mid Jem
 #define star0Pin    5
+//Mid Jem
 #define star1Pin    6
+//Top Jem
 #define star2Pin    7
 
 #define COLOR_ORDER GRB
@@ -94,25 +97,33 @@ bool readMsgeq7() {
 }
 
 void updateBottomRow() {
-  uint8_t val = MSGEQ7.get(MSGEQ7_BASS);
+  uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
+  uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
+  uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
   // Reduce noise
-  val = mapNoise(val);
+  valLow = mapNoise(valLow);
+  valMid = mapNoise(valMid);
+  valHigh = mapNoise(valHigh);
 
   // Visualize leds to the beat
-  CRGB color = CRGB::White;
-  color.nscale8_video(val);
+  CRGB colorLow = CRGB::White;
+  colorLow.nscale8_video(valLow);
+  CRGB colorMid = CRGB::Red;
+  colorMid.nscale8_video(valMid);
+  CRGB colorHigh = CRGB::Blue;
+  colorHigh.nscale8_video(valHigh);
   //star0Leds
   //fill_solid(leds, NUM_LEDS, color);
   //fill_solid(star0Leds, starCount, CRGB::White);
-  
-  fill_solid(star0Leds, starCount, color);
-  fill_solid(star1Leds, starCount, color);
-  fill_solid(star2Leds, starCount, color);
-  fill_solid(stripLeds, numStripLeds, color);
-//  
-//  for (int i = 0; i < ledSectionLength; i++) {
-//    stripLeds[bottomLeds[i]] = color;
-//  }
+
+  fill_solid(star0Leds, starCount, colorMid);
+  fill_solid(star1Leds, starCount, colorMid);
+  fill_solid(star2Leds, starCount, colorHigh);
+  fill_solid(stripLeds, numStripLeds, colorLow);
+  //
+  //  for (int i = 0; i < ledSectionLength; i++) {
+  //    stripLeds[bottomLeds[i]] = color;
+  //  }
 }
 
 void updateSides() {
@@ -132,4 +143,6 @@ void updateSides() {
     }
   }
 }
+
+
 
