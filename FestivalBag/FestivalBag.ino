@@ -1,164 +1,148 @@
-#include <Adafruit_NeoPixel.h>
-#ifdef __AVR__
-  #include <avr/power.h>
-#endif
+/*
+  Copyright (c) 2014-2016 NicoHood
+  See the readme for credit to other people.
 
-#define PIN 0
+  MSGEQ7 FastLED example
+  Output via Led strip and FastLED library
 
-// Parameter 1 = number of pixels in strip
-// Parameter 2 = Arduino pin number (most are valid)
-// Parameter 3 = pixel type flags, add together as needed:
-//   NEO_KHZ800  800 KHz bitstream (most NeoPixel products w/WS2812 LEDs)
-//   NEO_KHZ400  400 KHz (classic 'v1' (not v2) FLORA pixels, WS2811 drivers)
-//   NEO_GRB     Pixels are wired for GRB bitstream (most NeoPixel products)
-//   NEO_RGB     Pixels are wired for RGB bitstream (v1 FLORA pixels, not v2)
-//   NEO_RGBW    Pixels are wired for RGBW bitstream (NeoPixel RGBW products)
-Adafruit_NeoPixel strip0 = Adafruit_NeoPixel(7, 0, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip1 = Adafruit_NeoPixel(7, 1, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip2 = Adafruit_NeoPixel(7, 2, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip3 = Adafruit_NeoPixel(7, 3, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip4 = Adafruit_NeoPixel(7, 4, NEO_GRB + NEO_KHZ800);
-Adafruit_NeoPixel strip5 = Adafruit_NeoPixel(30, 5, NEO_GRB + NEO_KHZ800);
+  Reads MSGEQ7 IC with 7 different frequencies from range 0-255
+  63Hz, 160Hz, 400Hz, 1kHz, 2.5kHz, 6.25KHz, 16kHz
+*/
 
-// IMPORTANT: To reduce NeoPixel burnout risk, add 1000 uF capacitor across
-// pixel power leads, add 300 - 500 Ohm resistor on first pixel's data input
-// and minimize distance between Arduino and first pixel.  Avoid connecting
-// on a live circuit...if you must, connect GND first.
+// FastLED
+#include "FastLED.h"
+
+#define stripPin    4
+//Mid Jem
+#define star0Pin    5
+//Mid Jem
+#define star1Pin    6
+//Top Jem
+#define star2Pin    7
+
+#define COLOR_ORDER GRB
+#define CHIPSET     WS2812 // WS2811 LPD8806
+
+#define numStripLeds    30
+#define numStarLeds    7
+
+#define BRIGHTNESS  255  // reduce power consumption
+#define LED_DITHER  255  // try 0 to disable flickering
+#define CORRECTION  TypicalLEDStrip
+
+CRGB stripLeds[numStripLeds]; // Define the array of leds
+CRGB star0Leds[numStarLeds];
+CRGB star1Leds[numStarLeds];
+CRGB star2Leds[numStarLeds];
+
+
+
+// MSGEQ7
+#include "MSGEQ7.h"
+#define inputPin A0
+#define pinReset A5
+#define pinStrobe 2
+
+#define MSGEQ7_INTERVAL ReadsPerSecond(50)
+#define MSGEQ7_SMOOTH true
+
+CMSGEQ7<MSGEQ7_SMOOTH, pinReset, pinStrobe, inputPin> MSGEQ7;
+
+const int ledSectionLength = 10;
+const int starCount = 7;
+
+//all in viewers perspecrtivwe
+byte rightLeds[ledSectionLength] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+byte bottomLeds[ledSectionLength] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+byte leftLeds[ledSectionLength] = {29, 28, 27, 26, 25, 24, 23, 22, 21, 20};
+
+
+
 
 void setup() {
-  // This is for Trinket 5V 16MHz, you can remove these three lines if you are not using a Trinket
-  #if defined (__AVR_ATtiny85__)
-    if (F_CPU == 16000000) clock_prescale_set(clock_div_1);
-  #endif
-  // End of trinket special code
+  // FastLED setup
+  FastLED.addLeds<CHIPSET, stripPin, COLOR_ORDER>(stripLeds, numStripLeds).setCorrection(CORRECTION);
+  FastLED.addLeds<CHIPSET, star0Pin, COLOR_ORDER>(star0Leds, numStarLeds).setCorrection(CORRECTION);
+  FastLED.addLeds<CHIPSET, star1Pin, COLOR_ORDER>(star1Leds, numStarLeds).setCorrection(CORRECTION);
+  FastLED.addLeds<CHIPSET, star2Pin, COLOR_ORDER>(star2Leds, numStarLeds).setCorrection(CORRECTION);
 
 
 
-  strip0.begin();
-  strip1.begin();
-  strip2.begin();
-  strip3.begin();
-  strip4.begin();
-  strip5.begin();
-  strip0.show(); // Initialize all pixels to 'off'
-  strip1.show(); // Initialize all pixels to 'off'
-  strip2.show(); // Initialize all pixels to 'off'
-  strip3.show(); // Initialize all pixels to 'off'
-  strip4.show(); // Initialize all pixels to 'off'
-  strip5.show(); // Initialize all pixels to 'off'
+
+  FastLED.setBrightness( BRIGHTNESS );
+  FastLED.setDither(LED_DITHER);
+  FastLED.show(); // needed to reset leds to zero
+
+  // This will set the IC ready for reading
+  MSGEQ7.begin();
+
+  Serial.begin(57600);
 }
 
 void loop() {
-  // Some example procedures showing how to display to the pixels:
-  //colorWipe(strip.Color(255, 0, 0), 50); // Red
-  //colorWipe(strip.Color(0, 255, 0), 50); // Green
-  //colorWipe(strip.Color(0, 0, 255), 50); // Blue
-//colorWipe(strip.Color(0, 0, 0, 255), 50); // White RGBW
-  // Send a theater pixel chase in...
-  //theaterChase(strip.Color(127, 127, 127), 50); // White
-  //theaterChase(strip.Color(127, 0, 0), 50); // Red
-  //theaterChase(strip.Color(0, 0, 127), 50); // Blue
+  // Analyze without delay
+  bool newReading = readMsgeq7();
 
-  //rainbow(20);
-  rainbowCycle(20);
-  //theaterChaseRainbow(50);
+  if (newReading) {
+    updateBottomRow();
+    //updateSides();
+    FastLED.show();
+  }
 }
 
-// Fill the dots one after the other with a color
-//void colorWipe(uint32_t c, uint8_t wait) {
-//  for(uint16_t i=0; i<strip.numPixels(); i++) {
-//    strip.setPixelColor(i, c);
-//    strip.show();
-//    delay(wait);
-//  }
-//}
 
-//void rainbow(uint8_t wait) {
-//  uint16_t i, j;
-//
-//  for(j=0; j<256; j++) {
-//    for(i=0; i<strip.numPixels(); i++) {
-//      strip.setPixelColor(i, Wheel((i+j) & 255));
-//    }
-//    strip.show();
-//    delay(wait);
-//  }
-//}
+bool readMsgeq7() {
+  bool newReading = MSGEQ7.read(MSGEQ7_INTERVAL);
+  return newReading;
+}
 
-// Slightly different, this makes the rainbow equally distributed throughout
-void rainbowCycle(uint8_t wait) {
-  uint16_t i, j;
+void updateBottomRow() {
+  uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
+  uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
+  uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
+  // Reduce noise
+  valLow = mapNoise(valLow);
+  valMid = mapNoise(valMid);
+  valHigh = mapNoise(valHigh);
 
-  for(j=0; j<256*5; j++) { // 5 cycles of all colors on wheel
-    for(i=0; i< strip0.numPixels(); i++) {
-      strip0.setPixelColor(i, Wheel(((i * 256 / strip0.numPixels()) + j) & 255));
-      strip1.setPixelColor(i, Wheel(((i * 256 / strip1.numPixels()) + j) & 255));
-      strip2.setPixelColor(i, Wheel(((i * 256 / strip2.numPixels()) + j) & 255));
-      
-      strip4.setPixelColor(i, Wheel(((i * 256 / strip4.numPixels()) + j) & 255));
-      strip5.setPixelColor(i, Wheel(((i * 256 / strip5.numPixels()) + j) & 255));
+  // Visualize leds to the beat
+  CRGB colorLow = CRGB::White;
+  colorLow.nscale8_video(valLow);
+  CRGB colorMid = CRGB::Red;
+  colorMid.nscale8_video(valMid);
+  CRGB colorHigh = CRGB::Blue;
+  colorHigh.nscale8_video(valHigh);
+  //star0Leds
+  //fill_solid(leds, NUM_LEDS, color);
+  //fill_solid(star0Leds, starCount, CRGB::White);
+
+  fill_solid(star0Leds, starCount, colorMid);
+  fill_solid(star1Leds, starCount, colorMid);
+  fill_solid(star2Leds, starCount, colorHigh);
+  fill_solid(stripLeds, numStripLeds, colorLow);
+  //
+  //  for (int i = 0; i < ledSectionLength; i++) {
+  //    stripLeds[bottomLeds[i]] = color;
+  //  }
+}
+
+void updateSides() {
+  uint8_t val = MSGEQ7.get(MSGEQ7_MID);
+  //uint8_t val = MSGEQ7.get(MSGEQ7_HIGH);
+  //val = mapNoise(val);
+  //Serial.println(val);
+  val = map(val, 0, 255, 0, 10);
+  for ( int i = 0; i < ledSectionLength; i++) {
+    if ( i > val) {
+      stripLeds[leftLeds[i]] = CRGB::Red;
+      stripLeds[rightLeds[i]] = CRGB::Red;
     }
-  for(i=0; i< strip3.numPixels(); i++) {
-    strip3.setPixelColor(i, Wheel(((i * 256 / strip3.numPixels()) + j) & 255));
-  }
-    
-    strip0.show();
-    strip1.show();
-    strip2.show();
-    strip3.show();
-    strip4.show();
-    strip5.show();
-    delay(wait);
+    else {
+      stripLeds[leftLeds[i]] = CRGB::Black;
+      stripLeds[rightLeds[i]] = CRGB::Black;
+    }
   }
 }
 
-//Theatre-style crawling lights.
-//void theaterChase(uint32_t c, uint8_t wait) {
-//  for (int j=0; j<10; j++) {  //do 10 cycles of chasing
-//    for (int q=0; q < 3; q++) {
-//      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//        strip.setPixelColor(i+q, c);    //turn every third pixel on
-//      }
-//      strip.show();
-//
-//      delay(wait);
-//
-//      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//        strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//      }
-//    }
-//  }
-//}
 
-//Theatre-style crawling lights with rainbow effect
-//void theaterChaseRainbow(uint8_t wait) {
-//  for (int j=0; j < 256; j++) {     // cycle all 256 colors in the wheel
-//    for (int q=0; q < 3; q++) {
-//      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//        strip.setPixelColor(i+q, Wheel( (i+j) % 255));    //turn every third pixel on
-//      }
-//      strip.show();
-//
-//      delay(wait);
-//
-//      for (uint16_t i=0; i < strip.numPixels(); i=i+3) {
-//        strip.setPixelColor(i+q, 0);        //turn every third pixel off
-//      }
-//    }
-//  }
-//}
 
-// Input a value 0 to 255 to get a color value.
-// The colours are a transition r - g - b - back to r.
-uint32_t Wheel(byte WheelPos) {
-  WheelPos = 255 - WheelPos;
-  if(WheelPos < 85) {
-    return strip0.Color(255 - WheelPos * 3, 0, WheelPos * 3);
-  }
-  if(WheelPos < 170) {
-    WheelPos -= 85;
-    return strip0.Color(0, WheelPos * 3, 255 - WheelPos * 3);
-  }
-  WheelPos -= 170;
-  return strip0.Color(WheelPos * 3, 255 - WheelPos * 3, 0);
-}

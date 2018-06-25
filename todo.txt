@@ -10,4 +10,31 @@ Bag Changes
 
 - add button to cycle through modes
 
+- try playing iwth getVolume()
+
+
+----------
+Modes - cycle with button
+
+--Demo modes
+1) 
+
+2)
+
+3)
+
+4)
+
+5)
+
+6)
+
+7)
+
+8)
+
+9)
+
+10)
+
 

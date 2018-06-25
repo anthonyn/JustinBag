@@ -23,7 +23,7 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812 // WS2811 LPD8806
 
-#define numStripLeds    30
+#define numStripLeds    120
 #define numStarLeds    7
 
 #define BRIGHTNESS  255  // reduce power consumption
@@ -39,8 +39,8 @@ CRGB star2Leds[numStarLeds];
 
 // MSGEQ7
 #include "MSGEQ7.h"
-#define inputPin A0
-#define pinReset A5
+#define inputPin A7
+#define pinReset 5
 #define pinStrobe 2
 
 #define MSGEQ7_INTERVAL ReadsPerSecond(50)
