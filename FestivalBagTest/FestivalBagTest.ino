@@ -13,6 +13,7 @@
 #include "FastLED.h"
 
 #define stripPin    4
+
 //Mid Jem
 #define star0Pin    5
 //Mid Jem
@@ -36,6 +37,7 @@ CRGB star1Leds[numStarLeds];
 CRGB star2Leds[numStarLeds];
 
 
+
 // MSGEQ7
 #include "MSGEQ7.h"
 #define inputPin A0
@@ -51,13 +53,12 @@ const int ledSectionLength = 10;
 const int starCount = 7;
 
 //all in viewers perspecrtivwe
+int rightLeds[ledSectionLength] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9};
+int bottomLeds[ledSectionLength] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
+int leftLeds[ledSectionLength] = {29, 28, 27, 26, 25, 24, 23, 22, 21, 20};
 
-//int rightLeds[ledSectionLength] = {9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-//int bottomLeds[ledSectionLength] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
-//int leftLeds[ledSectionLength] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
-int rightLeds[15] = {14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-int leftLeds[15] = {15,16,17,18,19,20,21,22,23,24,25,26,27,28,29};
+
 
 void setup() {
   // FastLED setup
@@ -66,6 +67,9 @@ void setup() {
   FastLED.addLeds<CHIPSET, star1Pin, COLOR_ORDER>(star1Leds, numStarLeds).setCorrection(CORRECTION);
   FastLED.addLeds<CHIPSET, star2Pin, COLOR_ORDER>(star2Leds, numStarLeds).setCorrection(CORRECTION);
 
+
+
+
   FastLED.setBrightness( BRIGHTNESS );
   FastLED.setDither(LED_DITHER);
   FastLED.show(); // needed to reset leds to zero
@@ -73,100 +77,81 @@ void setup() {
   // This will set the IC ready for reading
   MSGEQ7.begin();
 
-  Serial.begin(115200);
+  Serial.begin(57600);
 }
-uint8_t gHue = 0; // rotating "base color" used by many of the patterns
 
 void loop() {
   // Analyze without delay
-  bool newReading = readMsgeq7();
-
-  if (newReading) {
-    soundReactiveOne();
-    //updateBottomRow();
-    //updateSides();
-    FastLED.show();
-  }
-
-  //  EVERY_N_MILLISECONDS( 20 ) {
-  //    gHue++;  // slowly cycle the "base color" through the rainbow
+  //  bool newReading = readMsgeq7();
+  //
+  //  if (newReading) {
+  //    updateBottomRow();
+  //    //updateSides();
+  //    FastLED.show();
   //  }
-  //  rainbow();
-  //  FastLED.show();
-}
 
+  lightUpStripSections();
+  spinStar();
+
+  FastLED.show();
+
+  delay(100);
+
+}
 
 bool readMsgeq7() {
   bool newReading = MSGEQ7.read(MSGEQ7_INTERVAL);
   return newReading;
 }
 
-void soundReactiveOne() {
-  uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
-  uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
-  uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
-  // Reduce noise
-  valLow = mapNoise(valLow);
-  valMid = mapNoise(valMid);
-  valHigh = mapNoise(valHigh);
+void lightUpStripSections() {
+  for ( int i = 0;  i < ledSectionLength; i++) {
+    stripLeds[rightLeds[i]] = CRGB::Red;
+  }
+  for ( int i = 0;  i < ledSectionLength; i++) {
+    stripLeds[bottomLeds[i]] = CRGB::Blue;
+  }
+  for ( int i = 0;  i < ledSectionLength; i++) {
+    stripLeds[leftLeds[i]] = CRGB::Green;
+  }
+}
 
-  //Stip animations
-  CRGB colorStripBottom = CRGB::White;
-  colorStripBottom.nscale8_video(valLow);
 
-  //-->Bottom strip is bass
-//  for (int i = 0; i < ledSectionLength; i++) {
-//    stripLeds[bottomLeds[i]] = colorStripBottom;
-//  }
 
-  Serial.println(valLow);
+void spinStar() {
 
-  //-->Side walls VU meter
-  int positionOffset = 50;
+  static int starIndex = 0;
 
-  int sidePosition = map(valLow, 0, 255, 0, 10);
-
-  for ( int i = 0; i < 15; i++) {
-    if ( i < sidePosition) {
-      stripLeds[leftLeds[i]] = CRGB::White;
-      stripLeds[rightLeds[i]] = CRGB::White;
+  // position 0 is the center of the star
+  for ( int i = 1;  i < numStarLeds; i++) {
+    if ( i == starIndex) {
+      star0Leds[i] = CRGB::Green;
     }
     else {
-      stripLeds[leftLeds[i]] = CRGB::Black;
-      stripLeds[rightLeds[i]] = CRGB::Black;
-    }
-  }
-
-
-  //Mid Stars
-  CRGB colorMid = CRGB::Red;
-  colorMid.nscale8_video(valMid);
-
-
-  if (valMid > 10) {
-    gHue = gHue + 10;
-
-    rainbow(star0Leds);
-  }
-  else {
-    for ( int i = 0;  i < numStarLeds; i++) {
       star0Leds[i] = CRGB::Black;
     }
   }
 
-  for ( int i = 0;  i < numStarLeds; i++) {
-    star1Leds[(numStarLeds - i) % 7] = star0Leds[i];
+  //Mirror Stars
+  //  for ( int i = 1;  i < numStarLeds; i++) {
+  //    star1Leds[i] = star0Leds[i];
+  //    Serial.println(i);
+  //  }
+
+  //Invert Stars
+  for ( int i = 1;  i < numStarLeds; i++) {
+    star1Leds[numStarLeds - i] = star0Leds[i];
     Serial.println(i);
   }
 
+  //hacky limmiting statIndex to 1-6, not lighting led 0
+  if (++starIndex > 6) {
+    starIndex = 1;
+  }
 
-
-  //High Stars
-  CRGB colorHigh = CRGB::Blue;
-  colorHigh.nscale8_video(valHigh);
-  fill_solid(star2Leds, starCount, colorHigh);
-
+  //Serial.println(starIndex);
 }
+
 
 void updateBottomRow() {
   uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
@@ -180,12 +165,10 @@ void updateBottomRow() {
   // Visualize leds to the beat
   CRGB colorLow = CRGB::White;
   colorLow.nscale8_video(valLow);
-
   CRGB colorMid = CRGB::Red;
   colorMid.nscale8_video(valMid);
   CRGB colorHigh = CRGB::Blue;
   colorHigh.nscale8_video(valHigh);
-
   //star0Leds
   //fill_solid(leds, NUM_LEDS, color);
   //fill_solid(star0Leds, starCount, CRGB::White);
@@ -193,15 +176,11 @@ void updateBottomRow() {
   fill_solid(star0Leds, starCount, colorMid);
   fill_solid(star1Leds, starCount, colorMid);
   fill_solid(star2Leds, starCount, colorHigh);
-
   fill_solid(stripLeds, numStripLeds, colorLow);
-
-
+  //
   //  for (int i = 0; i < ledSectionLength; i++) {
-  //    stripLeds[bottomLeds[i]] = colorLow;
+  //    stripLeds[bottomLeds[i]] = color;
   //  }
-
-
 }
 
 void updateSides() {
