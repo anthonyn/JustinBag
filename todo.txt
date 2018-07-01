@@ -16,25 +16,38 @@ Bag Changes
 ----------
 Modes - cycle with button
 
+ --> brightness 20 & 255
+
 --Demo modes
-1) 
+1) rainbow
 
-2)
+2) rainbowWithGlitter
 
-3)
+--Custom 
+3) 	
 
-4)
+[] - Bottom -  bass
+[] - Side - VU Meter
+	
+[] - Stars - revolve and blink in the cetner
+	
+	
+	
+4) 
 
-5)
+5) 
 
-6)
+6) 
 
-7)
+7) 
 
-8)
+8) 
 
-9)
+9) 
 
-10)
+10) 
 
 
+
+FASTLED
+-add brightness per led array

@@ -26,7 +26,7 @@
 #define numStripLeds    30
 #define numStarLeds    7
 
-#define BRIGHTNESS  255  // reduce power consumption
+#define BRIGHTNESS  30  // reduce power consumption
 #define LED_DITHER  255  // try 0 to disable flickering
 #define CORRECTION  TypicalLEDStrip
 
@@ -57,7 +57,7 @@ const int starCount = 7;
 //int leftLeds[ledSectionLength] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
 int rightLeds[15] = {14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-int leftLeds[15] = {15,16,17,18,19,20,21,22,23,24,25,26,27,28,29};
+int leftLeds[15] = {15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
 void setup() {
   // FastLED setup
@@ -115,9 +115,9 @@ void soundReactiveOne() {
   colorStripBottom.nscale8_video(valLow);
 
   //-->Bottom strip is bass
-//  for (int i = 0; i < ledSectionLength; i++) {
-//    stripLeds[bottomLeds[i]] = colorStripBottom;
-//  }
+  //  for (int i = 0; i < ledSectionLength; i++) {
+  //    stripLeds[bottomLeds[i]] = colorStripBottom;
+  //  }
 
   Serial.println(valLow);
 
@@ -142,7 +142,7 @@ void soundReactiveOne() {
   CRGB colorMid = CRGB::Red;
   colorMid.nscale8_video(valMid);
 
-
+  //  //subtract from these value at some fixed rate in main loop  - make vars global
   if (valMid > 10) {
     gHue = gHue + 10;
 
@@ -158,6 +158,9 @@ void soundReactiveOne() {
     star1Leds[(numStarLeds - i) % 7] = star0Leds[i];
     Serial.println(i);
   }
+
+  //  fill_solid(star0Leds, starCount, colorMid);
+  //  fill_solid(star1Leds, starCount, colorMid);
 
 
 

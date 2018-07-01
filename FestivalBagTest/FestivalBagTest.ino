@@ -18,7 +18,7 @@
 #define star0Pin    5
 //Mid Jem
 #define star1Pin    6
-//Top Jem
+//Top Jem   
 #define star2Pin    7
 
 #define COLOR_ORDER GRB
