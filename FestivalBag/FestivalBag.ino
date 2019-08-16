@@ -101,6 +101,8 @@ bool readMsgeq7() {
   return newReading;
 }
 
+int cval = 0;
+
 void soundReactiveOne() {
   uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
   uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
@@ -110,9 +112,23 @@ void soundReactiveOne() {
   valMid = mapNoise(valMid);
   valHigh = mapNoise(valHigh);
 
+  if (valLow > 10){
+    cval = (cval + 1) % 255;
+  }
+
+  
   //Stip animations
-  CRGB colorStripBottom = CRGB::White;
-  colorStripBottom.nscale8_video(valLow);
+  //CRGB colorStripBottom = CRGB::White;
+  CHSV hsv( cval, 255, 255); // pure blue in HSV Rainbow space
+  CRGB rgb;
+  hsv2rgb_rainbow( hsv, rgb);
+  CRGB colorStripBottom = rgb;
+  
+  
+  colorStripBottom.nscale8_video(rgb);
+
+  //make rainbow pattern
+  
 
   //-->Bottom strip is bass
   //  for (int i = 0; i < ledSectionLength; i++) {
@@ -124,12 +140,13 @@ void soundReactiveOne() {
   //-->Side walls VU meter
   int positionOffset = 50;
 
-  int sidePosition = map(valLow, 0, 255, 0, 10);
+  int sidePosition = map(valLow, 0, 255, 0, 17);
 
+ 
   for ( int i = 0; i < 15; i++) {
     if ( i < sidePosition) {
-      stripLeds[leftLeds[i]] = CRGB::White;
-      stripLeds[rightLeds[i]] = CRGB::White;
+      stripLeds[leftLeds[i]] = rgb; //CRGB::White;
+      stripLeds[rightLeds[i]] = rgb; //CRGB::White;
     }
     else {
       stripLeds[leftLeds[i]] = CRGB::Black;
@@ -156,7 +173,7 @@ void soundReactiveOne() {
 
   for ( int i = 0;  i < numStarLeds; i++) {
     star1Leds[(numStarLeds - i) % 7] = star0Leds[i];
-    Serial.println(i);
+   // Serial.println(i);
   }
 
   //  fill_solid(star0Leds, starCount, colorMid);
@@ -171,59 +188,64 @@ void soundReactiveOne() {
 
 }
 
-void updateBottomRow() {
-  uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
-  uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
-  uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
-  // Reduce noise
-  valLow = mapNoise(valLow);
-  valMid = mapNoise(valMid);
-  valHigh = mapNoise(valHigh);
-
-  // Visualize leds to the beat
-  CRGB colorLow = CRGB::White;
-  colorLow.nscale8_video(valLow);
-
-  CRGB colorMid = CRGB::Red;
-  colorMid.nscale8_video(valMid);
-  CRGB colorHigh = CRGB::Blue;
-  colorHigh.nscale8_video(valHigh);
-
-  //star0Leds
-  //fill_solid(leds, NUM_LEDS, color);
-  //fill_solid(star0Leds, starCount, CRGB::White);
-
-  fill_solid(star0Leds, starCount, colorMid);
-  fill_solid(star1Leds, starCount, colorMid);
-  fill_solid(star2Leds, starCount, colorHigh);
-
-  fill_solid(stripLeds, numStripLeds, colorLow);
-
-
-  //  for (int i = 0; i < ledSectionLength; i++) {
-  //    stripLeds[bottomLeds[i]] = colorLow;
-  //  }
-
-
-}
-
-void updateSides() {
-  uint8_t val = MSGEQ7.get(MSGEQ7_MID);
-  //uint8_t val = MSGEQ7.get(MSGEQ7_HIGH);
-  //val = mapNoise(val);
-  //Serial.println(val);
-  val = map(val, 0, 255, 0, 10);
-  for ( int i = 0; i < ledSectionLength; i++) {
-    if ( i > val) {
-      stripLeds[leftLeds[i]] = CRGB::Red;
-      stripLeds[rightLeds[i]] = CRGB::Red;
-    }
-    else {
-      stripLeds[leftLeds[i]] = CRGB::Black;
-      stripLeds[rightLeds[i]] = CRGB::Black;
-    }
-  }
-}
 
 
 
+
+//
+//
+//void updateBottomRow() {
+//  uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
+//  uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
+//  uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
+//  // Reduce noise
+//  valLow = mapNoise(valLow);
+//  valMid = mapNoise(valMid);
+//  valHigh = mapNoise(valHigh);
+//
+//  // Visualize leds to the beat
+//  CRGB colorLow = CRGB::White;
+//  colorLow.nscale8_video(valLow);
+//
+//  CRGB colorMid = CRGB::Red;
+//  colorMid.nscale8_video(valMid);
+//  CRGB colorHigh = CRGB::Blue;
+//  colorHigh.nscale8_video(valHigh);
+//
+//  //star0Leds
+//  //fill_solid(leds, NUM_LEDS, color);
+//  //fill_solid(star0Leds, starCount, CRGB::White);
+//
+//  fill_solid(star0Leds, starCount, colorMid);
+//  fill_solid(star1Leds, starCount, colorMid);
+//  fill_solid(star2Leds, starCount, colorHigh);
+//
+//  fill_solid(stripLeds, numStripLeds, colorLow);
+//
+//
+//  //  for (int i = 0; i < ledSectionLength; i++) {
+//  //    stripLeds[bottomLeds[i]] = colorLow;
+//  //  }
+//
+//
+//}
+//
+//void updateSides() {
+//  uint8_t val = MSGEQ7.get(MSGEQ7_MID);
+//  //uint8_t val = MSGEQ7.get(MSGEQ7_HIGH);
+//  //val = mapNoise(val);
+//  //Serial.println(val);
+//  val = map(val, 0, 255, 0, 10);
+//  for ( int i = 0; i < ledSectionLength; i++) {
+//    if ( i > val) {
+//      stripLeds[leftLeds[i]] = CRGB::Red;
+//      stripLeds[rightLeds[i]] = CRGB::Red;
+//    }
+//    else {
+//      stripLeds[leftLeds[i]] = CRGB::Black;
+//      stripLeds[rightLeds[i]] = CRGB::Black;
+//    }
+//  }
+//}
+//
+//
