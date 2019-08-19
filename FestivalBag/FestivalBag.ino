@@ -26,7 +26,7 @@
 #define numStripLeds    30
 #define numStarLeds    7
 
-#define BRIGHTNESS  30  // reduce power consumption
+#define BRIGHTNESS  40  // reduce power consumption
 #define LED_DITHER  255  // try 0 to disable flickering
 #define CORRECTION  TypicalLEDStrip
 
@@ -56,8 +56,16 @@ const int starCount = 7;
 //int bottomLeds[ledSectionLength] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 //int leftLeds[ledSectionLength] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
-int rightLeds[15] = {14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0};
-int leftLeds[15] = {15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+int rightLeds[15] = {14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0};
+int leftLeds[15] =  {15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+
+//dot stuff
+int redDotLocation = 0;
+long redDotFadeTimer = 0;
+long redDotStayTime = 100;
+long redDotStayTimer = 0;
+int redDotFadeCounter = 0;
+
 
 void setup() {
   // FastLED setup
@@ -112,37 +120,36 @@ void soundReactiveOne() {
   valMid = mapNoise(valMid);
   valHigh = mapNoise(valHigh);
 
-  if (valLow > 10){
+  if (valLow > 10) {
     cval = (cval + 1) % 255;
   }
 
-  
+
   //Stip animations
   //CRGB colorStripBottom = CRGB::White;
   CHSV hsv( cval, 255, 255); // pure blue in HSV Rainbow space
   CRGB rgb;
   hsv2rgb_rainbow( hsv, rgb);
   CRGB colorStripBottom = rgb;
-  
-  
-  colorStripBottom.nscale8_video(rgb);
 
-  //make rainbow pattern
-  
+  colorStripBottom.nscale8_video(rgb);
 
   //-->Bottom strip is bass
   //  for (int i = 0; i < ledSectionLength; i++) {
   //    stripLeds[bottomLeds[i]] = colorStripBottom;
   //  }
 
+  Serial.print("Bass value is: ");
   Serial.println(valLow);
 
   //-->Side walls VU meter
   int positionOffset = 50;
 
-  int sidePosition = map(valLow, 0, 255, 0, 17);
+  int sidePosition = map(valLow, 0, 235, 0, 14);
 
- 
+  //Serial.println("side position is " + sidePosition);
+
+  //paint lines
   for ( int i = 0; i < 15; i++) {
     if ( i < sidePosition) {
       stripLeds[leftLeds[i]] = rgb; //CRGB::White;
@@ -154,7 +161,30 @@ void soundReactiveOne() {
     }
   }
 
+  if (sidePosition > redDotLocation) {
+    redDotLocation = sidePosition;
+    redDotStayTimer = millis();
+    redDotFadeCounter = 0;
+    
+  }
+  else{
+    if ((millis() - redDotStayTimer)  > redDotStayTime){
+        if (redDotFadeCounter++ % 2 == 0){
+          redDotLocation--;
+          min(redDotLocation, 0);
+        }
+    }  
+  }
 
+
+
+  //paint reddot
+  stripLeds[leftLeds[redDotLocation]] = CRGB::Red;
+  stripLeds[rightLeds[redDotLocation]] = CRGB::Red;
+
+
+
+////////
   //Mid Stars
   CRGB colorMid = CRGB::Red;
   colorMid.nscale8_video(valMid);
@@ -173,7 +203,7 @@ void soundReactiveOne() {
 
   for ( int i = 0;  i < numStarLeds; i++) {
     star1Leds[(numStarLeds - i) % 7] = star0Leds[i];
-   // Serial.println(i);
+    // Serial.println(i);
   }
 
   //  fill_solid(star0Leds, starCount, colorMid);
