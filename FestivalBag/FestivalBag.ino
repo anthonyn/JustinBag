@@ -14,7 +14,7 @@
 
 #define stripPin    4
 //Mid Jem
-#define star0Pin    5
+#define circlePin    5
 //Mid Jem
 #define star1Pin    6
 //Top Jem
@@ -23,15 +23,16 @@
 #define COLOR_ORDER GRB
 #define CHIPSET     WS2812 // WS2811 LPD8806
 
-#define numStripLeds    30
+#define numStripLeds    36
 #define numStarLeds    7
+#define numCircleLeds    16
 
 #define BRIGHTNESS  40  // reduce power consumption
 #define LED_DITHER  255  // try 0 to disable flickering
 #define CORRECTION  TypicalLEDStrip
 
 CRGB stripLeds[numStripLeds]; // Define the array of leds
-CRGB star0Leds[numStarLeds];
+CRGB circleLeds[numCircleLeds];
 CRGB star1Leds[numStarLeds];
 CRGB star2Leds[numStarLeds];
 
@@ -56,8 +57,8 @@ const int starCount = 7;
 //int bottomLeds[ledSectionLength] = {10, 11, 12, 13, 14, 15, 16, 17, 18, 19};
 //int leftLeds[ledSectionLength] = {20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
 
-int rightLeds[15] = {14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0};
-int leftLeds[15] =  {15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29};
+int rightLeds[18] = {17, 16, 15, 14, 13, 12, 11, 10,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0};
+int leftLeds[18] =  {18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35};
 
 //dot stuff
 int redDotLocation = 0;
@@ -70,7 +71,7 @@ int redDotFadeCounter = 0;
 void setup() {
   // FastLED setup
   FastLED.addLeds<CHIPSET, stripPin, COLOR_ORDER>(stripLeds, numStripLeds).setCorrection(CORRECTION);
-  FastLED.addLeds<CHIPSET, star0Pin, COLOR_ORDER>(star0Leds, numStarLeds).setCorrection(CORRECTION);
+  FastLED.addLeds<CHIPSET, circlePin, COLOR_ORDER>(circleLeds, numCircleLeds).setCorrection(CORRECTION);
   FastLED.addLeds<CHIPSET, star1Pin, COLOR_ORDER>(star1Leds, numStarLeds).setCorrection(CORRECTION);
   FastLED.addLeds<CHIPSET, star2Pin, COLOR_ORDER>(star2Leds, numStarLeds).setCorrection(CORRECTION);
 
@@ -115,10 +116,14 @@ void soundReactiveOne() {
   uint8_t valLow = MSGEQ7.get(MSGEQ7_LOW);
   uint8_t valMid = MSGEQ7.get(MSGEQ7_MID);
   uint8_t valHigh = MSGEQ7.get(MSGEQ7_HIGH);
+  
+  uint8_t valNewMid = MSGEQ7.get(MSGEQ7_2);
+  
   // Reduce noise
   valLow = mapNoise(valLow);
   valMid = mapNoise(valMid);
   valHigh = mapNoise(valHigh);
+  valNewMid = mapNoise(valNewMid);
 
   if (valLow > 10) {
     cval = (cval + 1) % 255;
@@ -147,10 +152,11 @@ void soundReactiveOne() {
 
   int sidePosition = map(valLow, 0, 235, 0, 14);
 
-  //Serial.println("side position is " + sidePosition);
+  Serial.print("side position is ");
+  Serial.println(sidePosition);
 
   //paint lines
-  for ( int i = 0; i < 15; i++) {
+  for ( int i = 0; i < 18; i++) {
     if ( i < sidePosition) {
       stripLeds[leftLeds[i]] = rgb; //CRGB::White;
       stripLeds[rightLeds[i]] = rgb; //CRGB::White;
@@ -191,20 +197,38 @@ void soundReactiveOne() {
 
   //  //subtract from these value at some fixed rate in main loop  - make vars global
   if (valMid > 10) {
-    gHue = gHue + 10;
+    gHue = gHue + 2;
 
-    rainbow(star0Leds);
+    rainbow(circleLeds);
   }
   else {
-    for ( int i = 0;  i < numStarLeds; i++) {
-      star0Leds[i] = CRGB::Black;
+    for ( int i = 0;  i < numCircleLeds; i++) {
+      circleLeds[i] = CRGB::Black;
+      
     }
   }
 
-  for ( int i = 0;  i < numStarLeds; i++) {
-    star1Leds[(numStarLeds - i) % 7] = star0Leds[i];
-    // Serial.println(i);
+  CRGB colorNewMid = CRGB::Red;
+  colorNewMid.nscale8_video(valNewMid);
+
+  //  //subtract from these value at some fixed rate in main loop  - make vars global
+  if (valNewMid > 10) {
+    gHue = gHue + 2;
+
+    rainbow(star1Leds);
   }
+  else {
+    for ( int i = 0;  i < numStarLeds; i++) {
+      star1Leds[i] = CRGB::Black;
+      
+    }
+  }
+
+
+//  for ( int i = 0;  i < numStarLeds; i++) {
+//    star1Leds[(numStarLeds - i) % 7] = circleLeds[i]*= 3;
+//    // Serial.println(i);
+//  }
 
   //  fill_solid(star0Leds, starCount, colorMid);
   //  fill_solid(star1Leds, starCount, colorMid);

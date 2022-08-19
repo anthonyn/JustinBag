@@ -5,7 +5,7 @@
 void rainbow(CRGB *stripLeds ) 
 {
   // FastLED's built-in rainbow generator
-  fill_rainbow( stripLeds, 7, gHue, 7);
+  fill_rainbow( stripLeds, 16, gHue, 7);
 }
 
 //void rainbowWithGlitter() 
